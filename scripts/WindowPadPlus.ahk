@@ -105,6 +105,23 @@ MoveToRelativeArea(posX, posY, sizeW, sizeH)
     WinMove(nX, nY, nW, nH, "A")
 }
 
+; Move window to an absolute position on the monitor
+MoveToAbsoluteArea(posX, posY, sizeW, sizeH)
+{
+    RestoreIfMaximized()
+    GetWindowMonitor(&monLeft, &monTop, &monRight, &monBottom)
+    
+    monW := monRight - monLeft
+    monH := monBottom - monTop
+    
+    nX := monLeft + (monW * posX)
+    nY := monTop + (monH * posY)
+    nW := monW * sizeW
+    nH := monH * sizeH
+    
+    WinMove(nX, nY, nW, nH, "A")
+}
+
 ; Numpad0 + NumpadAdd: Maximize window
 Numpad0 & NumpadAdd::WinMaximize("A")
 
@@ -216,6 +233,33 @@ Numpad0 & Numpad1::MoveToRelativeArea(0, 0.5, 0.5, 0.5)
 Numpad0 & Numpad3::MoveToRelativeArea(0.5, 0.5, 0.5, 0.5)
 
 ; =============================================================================
+; Shift+Numpad0-based hotkeys (absolute positioning)
+; When Shift is held with NumLock ON, Windows transforms the numpad keys:
+;   Numpad0 -> NumpadIns, Numpad4 -> NumpadLeft, Numpad6 -> NumpadRight, etc.
+; =============================================================================
+
+#HotIf GetKeyState("Shift", "P")
+; Shift pressed first: Numpad0 -> NumpadIns, direction keys -> nav keys
+NumpadIns & NumpadLeft::MoveToAbsoluteArea(0, 0, 0.5, 1)
+NumpadIns & NumpadRight::MoveToAbsoluteArea(0.5, 0, 0.5, 1)
+NumpadIns & NumpadUp::MoveToAbsoluteArea(0, 0, 1, 0.5)
+NumpadIns & NumpadDown::MoveToAbsoluteArea(0, 0.5, 1, 0.5)
+NumpadIns & NumpadHome::MoveToAbsoluteArea(0, 0, 0.5, 0.5)
+NumpadIns & NumpadPgUp::MoveToAbsoluteArea(0.5, 0, 0.5, 0.5)
+NumpadIns & NumpadEnd::MoveToAbsoluteArea(0, 0.5, 0.5, 0.5)
+NumpadIns & NumpadPgDn::MoveToAbsoluteArea(0.5, 0.5, 0.5, 0.5)
+; Numpad0 pressed first: Numpad0 stays as Numpad0, direction keys -> nav keys
+Numpad0 & NumpadLeft::MoveToAbsoluteArea(0, 0, 0.5, 1)
+Numpad0 & NumpadRight::MoveToAbsoluteArea(0.5, 0, 0.5, 1)
+Numpad0 & NumpadUp::MoveToAbsoluteArea(0, 0, 1, 0.5)
+Numpad0 & NumpadDown::MoveToAbsoluteArea(0, 0.5, 1, 0.5)
+Numpad0 & NumpadHome::MoveToAbsoluteArea(0, 0, 0.5, 0.5)
+Numpad0 & NumpadPgUp::MoveToAbsoluteArea(0.5, 0, 0.5, 0.5)
+Numpad0 & NumpadEnd::MoveToAbsoluteArea(0, 0.5, 0.5, 0.5)
+Numpad0 & NumpadPgDn::MoveToAbsoluteArea(0.5, 0.5, 0.5, 0.5)
+#HotIf
+
+; =============================================================================
 ; CapsLock-based hotkeys (for keyboards without numpad)
 ; Layout: qwe=789, asd=456, zxc=123, tab=+, space=enter
 ; =============================================================================
@@ -305,32 +349,80 @@ CapsLock & Space::
         WinMaximize("A")
 }
 
-; CapsLock + S: Maximize window (+)
-CapsLock & s::WinMaximize("A")
+; CapsLock + S: Maximize window (+) or Shift+CapsLock+S: Bottom half (absolute)
+CapsLock & s::
+{
+    if (GetKeyState("Shift", "P"))
+        MoveToAbsoluteArea(0, 0.5, 1, 0.5)
+    else
+        WinMaximize("A")
+}
 
-; CapsLock + A: Left half (4)
-CapsLock & a::MoveToRelativeArea(0, 0, 0.5, 1)
+; CapsLock + A: Left half (4) or Shift+CapsLock+A: Left half (absolute)
+CapsLock & a::
+{
+    if (GetKeyState("Shift", "P"))
+        MoveToAbsoluteArea(0, 0, 0.5, 1)
+    else
+        MoveToRelativeArea(0, 0, 0.5, 1)
+}
 
-; CapsLock + D: Right half (6)
-CapsLock & d::MoveToRelativeArea(0.5, 0, 0.5, 1)
+; CapsLock + D: Right half (6) or Shift+CapsLock+D: Right half (absolute)
+CapsLock & d::
+{
+    if (GetKeyState("Shift", "P"))
+        MoveToAbsoluteArea(0.5, 0, 0.5, 1)
+    else
+        MoveToRelativeArea(0.5, 0, 0.5, 1)
+}
 
-; CapsLock + W: Top half (8)
-CapsLock & w::MoveToRelativeArea(0, 0, 1, 0.5)
+; CapsLock + W: Top half (8) or Shift+CapsLock+W: Top half (absolute)
+CapsLock & w::
+{
+    if (GetKeyState("Shift", "P"))
+        MoveToAbsoluteArea(0, 0, 1, 0.5)
+    else
+        MoveToRelativeArea(0, 0, 1, 0.5)
+}
 
 ; CapsLock + X: Bottom half (2)
 CapsLock & x::MoveToRelativeArea(0, 0.5, 1, 0.5)
 
-; CapsLock + Q: Top-left quarter (7)
-CapsLock & q::MoveToRelativeArea(0, 0, 0.5, 0.5)
+; CapsLock + Q: Top-left quarter (7) or Shift+CapsLock+Q: Top-left quarter (absolute)
+CapsLock & q::
+{
+    if (GetKeyState("Shift", "P"))
+        MoveToAbsoluteArea(0, 0, 0.5, 0.5)
+    else
+        MoveToRelativeArea(0, 0, 0.5, 0.5)
+}
 
-; CapsLock + E: Top-right quarter (9)
-CapsLock & e::MoveToRelativeArea(0.5, 0, 0.5, 0.5)
+; CapsLock + E: Top-right quarter (9) or Shift+CapsLock+E: Top-right quarter (absolute)
+CapsLock & e::
+{
+    if (GetKeyState("Shift", "P"))
+        MoveToAbsoluteArea(0.5, 0, 0.5, 0.5)
+    else
+        MoveToRelativeArea(0.5, 0, 0.5, 0.5)
+}
 
-; CapsLock + Z: Bottom-left quarter (1)
-CapsLock & z::MoveToRelativeArea(0, 0.5, 0.5, 0.5)
+; CapsLock + Z: Bottom-left quarter (1) or Shift+CapsLock+Z: Bottom-left quarter (absolute)
+CapsLock & z::
+{
+    if (GetKeyState("Shift", "P"))
+        MoveToAbsoluteArea(0, 0.5, 0.5, 0.5)
+    else
+        MoveToRelativeArea(0, 0.5, 0.5, 0.5)
+}
 
-; CapsLock + C: Bottom-right quarter (3)
-CapsLock & c::MoveToRelativeArea(0.5, 0.5, 0.5, 0.5)
+; CapsLock + C: Bottom-right quarter (3) or Shift+CapsLock+C: Bottom-right quarter (absolute)
+CapsLock & c::
+{
+    if (GetKeyState("Shift", "P"))
+        MoveToAbsoluteArea(0.5, 0.5, 0.5, 0.5)
+    else
+        MoveToRelativeArea(0.5, 0.5, 0.5, 0.5)
+}
 
 ; =============================================================================
 ; Thirds mode: Numpad0 + NumpadDot as chord, then 5/8/4/6/2 for thirds
