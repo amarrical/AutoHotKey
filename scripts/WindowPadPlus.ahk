@@ -260,37 +260,60 @@ Numpad0 & NumpadPgDn::MoveToAbsoluteArea(0.5, 0.5, 0.5, 0.5)
 #HotIf
 
 ; =============================================================================
+; Ctrl+Numpad0-based hotkeys (3/4 absolute positioning)
+; Ctrl does NOT transform numpad key names, so only one hotkey set is needed
+; =============================================================================
+
+#HotIf GetKeyState("Ctrl", "P")
+; Ctrl+Numpad0 3/4 snapping
+Numpad0 & Numpad4::MoveToAbsoluteArea(0, 0, 0.75, 1)
+Numpad0 & Numpad6::MoveToAbsoluteArea(0.25, 0, 0.75, 1)
+Numpad0 & Numpad8::MoveToAbsoluteArea(0, 0, 1, 0.75)
+Numpad0 & Numpad2::MoveToAbsoluteArea(0, 0.25, 1, 0.75)
+; Ctrl+NumpadDot 2/3 snapping
+NumpadDot & Numpad4::MoveToAbsoluteArea(0, 0, 0.666667, 1)
+NumpadDot & Numpad6::MoveToAbsoluteArea(0.333333, 0, 0.666667, 1)
+NumpadDot & Numpad8::MoveToAbsoluteArea(0, 0, 1, 0.666667)
+NumpadDot & Numpad2::MoveToAbsoluteArea(0, 0.333333, 1, 0.666667)
+#HotIf
+
+; =============================================================================
 ; CapsLock-based hotkeys (for keyboards without numpad)
 ; Layout: qwe=789, asd=456, zxc=123, tab=+, space=enter
 ; =============================================================================
 
-; CapsLock + Tab: Center half (5)
+; CapsLock + Tab: Center half (5) or Shift+CapsLock+Tab: Alternate center half
 CapsLock & Tab::
 {
-    RestoreIfMaximized()
-    GetWindowMonitor(&monLeft, &monTop, &monRight, &monBottom)
-    
-    monW := monRight - monLeft
-    monH := monBottom - monTop
-    
-    if (monW >= monH)
-    {
-        ; Landscape: half width, full height, centered
-        newX := monLeft + (monW // 4)
-        newY := monTop
-        newW := monW // 2
-        newH := monH
-    }
+    if (GetKeyState("Shift", "P"))
+        MoveToAlternateCenterHalf()
     else
     {
-        ; Portrait: full width, half height, centered
-        newX := monLeft
-        newY := monTop + (monH // 4)
-        newW := monW
-        newH := monH // 2
+        RestoreIfMaximized()
+        GetWindowMonitor(&monLeft, &monTop, &monRight, &monBottom)
+        
+        monW := monRight - monLeft
+        monH := monBottom - monTop
+        
+        if (monW >= monH)
+        {
+            ; Landscape: half width, full height, centered
+            newX := monLeft + (monW // 4)
+            newY := monTop
+            newW := monW // 2
+            newH := monH
+        }
+        else
+        {
+            ; Portrait: full width, half height, centered
+            newX := monLeft
+            newY := monTop + (monH // 4)
+            newW := monW
+            newH := monH // 2
+        }
+        
+        WinMove(newX, newY, newW, newH, "A")
     }
-    
-    WinMove(newX, newY, newW, newH, "A")
 }
 
 ; CapsLock + Space: Move to next monitor
@@ -358,35 +381,47 @@ CapsLock & s::
         WinMaximize("A")
 }
 
-; CapsLock + A: Left half (4) or Shift+CapsLock+A: Left half (absolute)
+; CapsLock + A: Left half (4) or Shift+CapsLock+A: Left half (absolute) or Ctrl+CapsLock+A: Left 3/4 (absolute)
 CapsLock & a::
 {
-    if (GetKeyState("Shift", "P"))
+    if (GetKeyState("Ctrl", "P"))
+        MoveToAbsoluteArea(0, 0, 0.75, 1)
+    else if (GetKeyState("Shift", "P"))
         MoveToAbsoluteArea(0, 0, 0.5, 1)
     else
         MoveToRelativeArea(0, 0, 0.5, 1)
 }
 
-; CapsLock + D: Right half (6) or Shift+CapsLock+D: Right half (absolute)
+; CapsLock + D: Right half (6) or Shift+CapsLock+D: Right half (absolute) or Ctrl+CapsLock+D: Right 3/4 (absolute)
 CapsLock & d::
 {
-    if (GetKeyState("Shift", "P"))
+    if (GetKeyState("Ctrl", "P"))
+        MoveToAbsoluteArea(0.25, 0, 0.75, 1)
+    else if (GetKeyState("Shift", "P"))
         MoveToAbsoluteArea(0.5, 0, 0.5, 1)
     else
         MoveToRelativeArea(0.5, 0, 0.5, 1)
 }
 
-; CapsLock + W: Top half (8) or Shift+CapsLock+W: Top half (absolute)
+; CapsLock + W: Top half (8) or Shift+CapsLock+W: Top half (absolute) or Ctrl+CapsLock+W: Top 3/4 (absolute)
 CapsLock & w::
 {
-    if (GetKeyState("Shift", "P"))
+    if (GetKeyState("Ctrl", "P"))
+        MoveToAbsoluteArea(0, 0, 1, 0.75)
+    else if (GetKeyState("Shift", "P"))
         MoveToAbsoluteArea(0, 0, 1, 0.5)
     else
         MoveToRelativeArea(0, 0, 1, 0.5)
 }
 
-; CapsLock + X: Bottom half (2)
-CapsLock & x::MoveToRelativeArea(0, 0.5, 1, 0.5)
+; CapsLock + X: Bottom half (2) or Ctrl+CapsLock+X: Bottom 3/4 (absolute)
+CapsLock & x::
+{
+    if (GetKeyState("Ctrl", "P"))
+        MoveToAbsoluteArea(0, 0.25, 1, 0.75)
+    else
+        MoveToRelativeArea(0, 0.5, 1, 0.5)
+}
 
 ; CapsLock + Q: Top-left quarter (7) or Shift+CapsLock+Q: Top-left quarter (absolute)
 CapsLock & q::
@@ -442,6 +477,35 @@ MoveToThird(posX, posY, sizeW, sizeH)
     WinMove(nX, nY, nW, nH, "A")
 }
 
+; Center half function with alternate orientation (for monitor)
+MoveToAlternateCenterHalf()
+{
+    RestoreIfMaximized()
+    GetWindowMonitor(&monLeft, &monTop, &monRight, &monBottom)
+    
+    monW := monRight - monLeft
+    monH := monBottom - monTop
+    
+    if (monW >= monH)
+    {
+        ; Landscape: full width, half height, centered vertically
+        newX := monLeft
+        newY := monTop + (monH // 4)
+        newW := monW
+        newH := monH // 2
+    }
+    else
+    {
+        ; Portrait: half width, full height, centered horizontally
+        newX := monLeft + (monW // 4)
+        newY := monTop
+        newW := monW // 2
+        newH := monH
+    }
+    
+    WinMove(newX, newY, newW, newH, "A")
+}
+
 ; Center third function (for monitor)
 MoveToCenterThird()
 {
@@ -466,6 +530,35 @@ MoveToCenterThird()
         newY := monTop + (monH // 3)
         newW := monW
         newH := monH // 3
+    }
+    
+    WinMove(newX, newY, newW, newH, "A")
+}
+
+; Center third function with alternate orientation (for monitor)
+MoveToAlternateCenterThird()
+{
+    RestoreIfMaximized()
+    GetWindowMonitor(&monLeft, &monTop, &monRight, &monBottom)
+    
+    monW := monRight - monLeft
+    monH := monBottom - monTop
+    
+    if (monW >= monH)
+    {
+        ; Landscape: full width, third height, centered vertically
+        newX := monLeft
+        newY := monTop + (monH // 3)
+        newW := monW
+        newH := monH // 3
+    }
+    else
+    {
+        ; Portrait: third width, full height, centered horizontally
+        newX := monLeft + (monW // 3)
+        newY := monTop
+        newW := monW // 3
+        newH := monH
     }
     
     WinMove(newX, newY, newW, newH, "A")
@@ -496,16 +589,23 @@ NumpadDot & Numpad2::MoveToThird(0, 0.666667, 1, 0.333333)
 ; =============================================================================
 
 #HotIf GetKeyState("Shift", "P")
+; Shift+Numpad0+5 hotkeys (alternate center half)
+; Shift pressed first: Numpad0 -> NumpadIns, Numpad5 -> NumpadClear
+NumpadIns & NumpadClear::MoveToAlternateCenterHalf()
+; Numpad0 pressed first: Numpad0 stays as Numpad0, Numpad5 -> NumpadClear
+Numpad0 & NumpadClear::MoveToAlternateCenterHalf()
+
+; Shift+NumpadDot-based hotkeys (absolute third positioning)
 ; Shift pressed first: NumpadDot -> NumpadDel, direction keys -> nav keys
 NumpadDel & NumpadLeft::MoveToAbsoluteArea(0, 0, 0.333333, 1)
 NumpadDel & NumpadRight::MoveToAbsoluteArea(0.666667, 0, 0.333333, 1)
-NumpadDel & NumpadClear::MoveToCenterThird()
+NumpadDel & NumpadClear::MoveToAlternateCenterThird()
 NumpadDel & NumpadUp::MoveToAbsoluteArea(0, 0, 1, 0.333333)
 NumpadDel & NumpadDown::MoveToAbsoluteArea(0, 0.666667, 1, 0.333333)
 ; NumpadDot pressed first: NumpadDot stays as NumpadDot, direction keys -> nav keys
 NumpadDot & NumpadLeft::MoveToAbsoluteArea(0, 0, 0.333333, 1)
 NumpadDot & NumpadRight::MoveToAbsoluteArea(0.666667, 0, 0.333333, 1)
-NumpadDot & NumpadClear::MoveToCenterThird()
+NumpadDot & NumpadClear::MoveToAlternateCenterThird()
 NumpadDot & NumpadUp::MoveToAbsoluteArea(0, 0, 1, 0.333333)
 NumpadDot & NumpadDown::MoveToAbsoluteArea(0, 0.666667, 1, 0.333333)
 #HotIf
