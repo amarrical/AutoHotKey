@@ -471,6 +471,9 @@ MoveToCenterThird()
     WinMove(newX, newY, newW, newH, "A")
 }
 
+; NumpadDot + NumpadAdd: Maximize window
+NumpadDot & NumpadAdd::WinMaximize("A")
+
 ; NumpadDot + Numpad5: Center third
 NumpadDot & Numpad5::MoveToCenterThird()
 
@@ -485,3 +488,24 @@ NumpadDot & Numpad8::MoveToThird(0, 0, 1, 0.333333)
 
 ; NumpadDot + Numpad2: Bottom third
 NumpadDot & Numpad2::MoveToThird(0, 0.666667, 1, 0.333333)
+
+; =============================================================================
+; Shift+NumpadDot-based hotkeys (absolute third positioning)
+; When Shift is held with NumLock ON, Windows transforms the numpad keys:
+;   NumpadDot -> NumpadDel, Numpad4 -> NumpadLeft, Numpad6 -> NumpadRight, etc.
+; =============================================================================
+
+#HotIf GetKeyState("Shift", "P")
+; Shift pressed first: NumpadDot -> NumpadDel, direction keys -> nav keys
+NumpadDel & NumpadLeft::MoveToAbsoluteArea(0, 0, 0.333333, 1)
+NumpadDel & NumpadRight::MoveToAbsoluteArea(0.666667, 0, 0.333333, 1)
+NumpadDel & NumpadClear::MoveToCenterThird()
+NumpadDel & NumpadUp::MoveToAbsoluteArea(0, 0, 1, 0.333333)
+NumpadDel & NumpadDown::MoveToAbsoluteArea(0, 0.666667, 1, 0.333333)
+; NumpadDot pressed first: NumpadDot stays as NumpadDot, direction keys -> nav keys
+NumpadDot & NumpadLeft::MoveToAbsoluteArea(0, 0, 0.333333, 1)
+NumpadDot & NumpadRight::MoveToAbsoluteArea(0.666667, 0, 0.333333, 1)
+NumpadDot & NumpadClear::MoveToCenterThird()
+NumpadDot & NumpadUp::MoveToAbsoluteArea(0, 0, 1, 0.333333)
+NumpadDot & NumpadDown::MoveToAbsoluteArea(0, 0.666667, 1, 0.333333)
+#HotIf
