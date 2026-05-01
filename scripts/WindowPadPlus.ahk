@@ -1,17 +1,43 @@
-#NoEnv
-SendMode Input
-SetWorkingDir %A_ScriptDir%
+#Requires AutoHotkey v2.0
+
+SendMode("Input")
+SetWorkingDir(A_ScriptDir)
+
+; Allow Numpad0 to type 0 when pressed alone (not as a modifier)
+; Uses Key Up to only fire if no chord was activated
+Numpad0 Up::
+{
+    if (A_PriorKey = "Numpad0")
+        Send("0")
+}
+NumpadIns Up::
+{
+    if (A_PriorKey = "NumpadIns")
+        Send("0")
+}
+
+; Allow NumpadDot to type . when pressed alone (not as a modifier)
+NumpadDot Up::
+{
+    if (A_PriorKey = "NumpadDot")
+        Send(".")
+}
+NumpadDel Up::
+{
+    if (A_PriorKey = "NumpadDel")
+        Send(".")
+}
 
 ; Get the current window's area (position and size)
 ; If maximized, returns the full monitor dimensions
-GetWindowArea(ByRef areaX, ByRef areaY, ByRef areaW, ByRef areaH)
+GetWindowArea(&areaX, &areaY, &areaW, &areaH)
 {
-    WinGetPos, winX, winY, winW, winH, A
-    WinGet, state, MinMax, A
+    WinGetPos(&winX, &winY, &winW, &winH, "A")
+    state := WinGetMinMax("A")
     
     if (state = 1)
     {
-        GetWindowMonitor(mL, mT, mR, mB)
+        GetWindowMonitor(&mL, &mT, &mR, &mB)
         areaX := mL
         areaY := mT
         areaW := mR - mL
@@ -27,17 +53,17 @@ GetWindowArea(ByRef areaX, ByRef areaY, ByRef areaW, ByRef areaH)
 }
 
 ; Get the monitor bounds for the active window
-GetWindowMonitor(ByRef monLeft, ByRef monTop, ByRef monRight, ByRef monBottom)
+GetWindowMonitor(&monLeft, &monTop, &monRight, &monBottom)
 {
     ; Use window center point for more reliable monitor detection
-    WinGetPos, wX, wY, wW, wH, A
+    WinGetPos(&wX, &wY, &wW, &wH, "A")
     centerX := wX + (wW // 2)
     centerY := wY + (wH // 2)
-    SysGet, mCount, MonitorCount
+    mCount := MonitorGetCount()
     
-    Loop, %mCount%
+    Loop mCount
     {
-        SysGet, m, Monitor, %A_Index%
+        MonitorGet(A_Index, &mLeft, &mTop, &mRight, &mBottom)
         if (centerX >= mLeft && centerX < mRight && centerY >= mTop && centerY < mBottom)
         {
             monLeft := mLeft
@@ -49,7 +75,7 @@ GetWindowMonitor(ByRef monLeft, ByRef monTop, ByRef monRight, ByRef monBottom)
     }
     
     ; Default to primary monitor
-    SysGet, m, Monitor, 1
+    MonitorGet(1, &mLeft, &mTop, &mRight, &mBottom)
     monLeft := mLeft
     monTop := mTop
     monRight := mRight
@@ -59,16 +85,16 @@ GetWindowMonitor(ByRef monLeft, ByRef monTop, ByRef monRight, ByRef monBottom)
 ; Restore window if maximized
 RestoreIfMaximized()
 {
-    WinGet, state, MinMax, A
+    state := WinGetMinMax("A")
     if (state = 1)
-        WinRestore, A
+        WinRestore("A")
 }
 
 ; Move window to a relative position within its current area
 MoveToRelativeArea(posX, posY, sizeW, sizeH)
 {
     ; Get area BEFORE restoring (so maximized windows use full monitor)
-    GetWindowArea(areaX, areaY, areaW, areaH)
+    GetWindowArea(&areaX, &areaY, &areaW, &areaH)
     RestoreIfMaximized()
     
     nX := areaX + (areaW * posX)
@@ -76,28 +102,27 @@ MoveToRelativeArea(posX, posY, sizeW, sizeH)
     nW := areaW * sizeW
     nH := areaH * sizeH
     
-    WinMove, A,, nX, nY, nW, nH
+    WinMove(nX, nY, nW, nH, "A")
 }
 
 ; Numpad0 + NumpadAdd: Maximize window
-Numpad0 & NumpadAdd::
-    WinMaximize, A
-return
+Numpad0 & NumpadAdd::WinMaximize("A")
 
 ; Numpad0 + NumpadEnter: Move to next monitor
 Numpad0 & NumpadEnter::
-    WinGet, wasMaximized, MinMax, A
+{
+    wasMaximized := WinGetMinMax("A")
     if (wasMaximized = 1)
-        WinRestore, A
+        WinRestore("A")
     
-    WinGetPos, winX, winY, winW, winH, A
-    SysGet, monCount, MonitorCount
+    WinGetPos(&winX, &winY, &winW, &winH, "A")
+    monCount := MonitorGetCount()
     
     ; Find current monitor
     curMon := 1
-    Loop, %monCount%
+    Loop monCount
     {
-        SysGet, mon, Monitor, %A_Index%
+        MonitorGet(A_Index, &monLeft, &monTop, &monRight, &monBottom)
         if (winX >= monLeft && winX < monRight && winY >= monTop && winY < monBottom)
         {
             curMon := A_Index
@@ -106,7 +131,7 @@ Numpad0 & NumpadEnter::
     }
     
     ; Get current monitor dimensions
-    SysGet, curM, Monitor, %curMon%
+    MonitorGet(curMon, &curMLeft, &curMTop, &curMRight, &curMBottom)
     curW := curMRight - curMLeft
     curH := curMBottom - curMTop
     
@@ -121,7 +146,7 @@ Numpad0 & NumpadEnter::
     if (nextMon > monCount)
         nextMon := 1
     
-    SysGet, nextM, Monitor, %nextMon%
+    MonitorGet(nextMon, &nextMLeft, &nextMTop, &nextMRight, &nextMBottom)
     nextW := nextMRight - nextMLeft
     nextH := nextMBottom - nextMTop
     
@@ -131,16 +156,17 @@ Numpad0 & NumpadEnter::
     newW := relW * nextW
     newH := relH * nextH
     
-    WinMove, A,, newX, newY, newW, newH
+    WinMove(newX, newY, newW, newH, "A")
     
     if (wasMaximized = 1)
-        WinMaximize, A
-return
+        WinMaximize("A")
+}
 
 ; Numpad0 + Numpad5: Center half (full height on landscape, full width on portrait)
 Numpad0 & Numpad5::
+{
     RestoreIfMaximized()
-    GetWindowMonitor(monLeft, monTop, monRight, monBottom)
+    GetWindowMonitor(&monLeft, &monTop, &monRight, &monBottom)
     
     monW := monRight - monLeft
     monH := monBottom - monTop
@@ -162,48 +188,32 @@ Numpad0 & Numpad5::
         newH := monH // 2
     }
     
-    WinMove, A,, newX, newY, newW, newH
-return
+    WinMove(newX, newY, newW, newH, "A")
+}
 
 ; Numpad0 + Numpad4: Left half
-Numpad0 & Numpad4::
-    MoveToRelativeArea(0, 0, 0.5, 1)
-return
+Numpad0 & Numpad4::MoveToRelativeArea(0, 0, 0.5, 1)
 
 ; Numpad0 + Numpad6: Right half
-Numpad0 & Numpad6::
-    MoveToRelativeArea(0.5, 0, 0.5, 1)
-return
+Numpad0 & Numpad6::MoveToRelativeArea(0.5, 0, 0.5, 1)
 
 ; Numpad0 + Numpad8: Top half
-Numpad0 & Numpad8::
-    MoveToRelativeArea(0, 0, 1, 0.5)
-return
+Numpad0 & Numpad8::MoveToRelativeArea(0, 0, 1, 0.5)
 
 ; Numpad0 + Numpad2: Bottom half
-Numpad0 & Numpad2::
-    MoveToRelativeArea(0, 0.5, 1, 0.5)
-return
+Numpad0 & Numpad2::MoveToRelativeArea(0, 0.5, 1, 0.5)
 
 ; Numpad0 + Numpad7: Top-left quarter
-Numpad0 & Numpad7::
-    MoveToRelativeArea(0, 0, 0.5, 0.5)
-return
+Numpad0 & Numpad7::MoveToRelativeArea(0, 0, 0.5, 0.5)
 
 ; Numpad0 + Numpad9: Top-right quarter
-Numpad0 & Numpad9::
-    MoveToRelativeArea(0.5, 0, 0.5, 0.5)
-return
+Numpad0 & Numpad9::MoveToRelativeArea(0.5, 0, 0.5, 0.5)
 
 ; Numpad0 + Numpad1: Bottom-left quarter
-Numpad0 & Numpad1::
-    MoveToRelativeArea(0, 0.5, 0.5, 0.5)
-return
+Numpad0 & Numpad1::MoveToRelativeArea(0, 0.5, 0.5, 0.5)
 
 ; Numpad0 + Numpad3: Bottom-right quarter
-Numpad0 & Numpad3::
-    MoveToRelativeArea(0.5, 0.5, 0.5, 0.5)
-return
+Numpad0 & Numpad3::MoveToRelativeArea(0.5, 0.5, 0.5, 0.5)
 
 ; =============================================================================
 ; CapsLock-based hotkeys (for keyboards without numpad)
@@ -212,8 +222,9 @@ return
 
 ; CapsLock + Tab: Center half (5)
 CapsLock & Tab::
+{
     RestoreIfMaximized()
-    GetWindowMonitor(monLeft, monTop, monRight, monBottom)
+    GetWindowMonitor(&monLeft, &monTop, &monRight, &monBottom)
     
     monW := monRight - monLeft
     monH := monBottom - monTop
@@ -235,25 +246,26 @@ CapsLock & Tab::
         newH := monH // 2
     }
     
-    WinMove, A,, newX, newY, newW, newH
-return
+    WinMove(newX, newY, newW, newH, "A")
+}
 
 ; CapsLock + Space: Move to next monitor
 CapsLock & Space::
-    WinGet, wasMaximized, MinMax, A
+{
+    wasMaximized := WinGetMinMax("A")
     if (wasMaximized = 1)
-        WinRestore, A
+        WinRestore("A")
     
-    WinGetPos, winX, winY, winW, winH, A
-    SysGet, monCount, MonitorCount
+    WinGetPos(&winX, &winY, &winW, &winH, "A")
+    monCount := MonitorGetCount()
     
     ; Find current monitor using center point
     centerX := winX + (winW // 2)
     centerY := winY + (winH // 2)
     curMon := 1
-    Loop, %monCount%
+    Loop monCount
     {
-        SysGet, mon, Monitor, %A_Index%
+        MonitorGet(A_Index, &monLeft, &monTop, &monRight, &monBottom)
         if (centerX >= monLeft && centerX < monRight && centerY >= monTop && centerY < monBottom)
         {
             curMon := A_Index
@@ -262,7 +274,7 @@ CapsLock & Space::
     }
     
     ; Get current monitor dimensions
-    SysGet, curM, Monitor, %curMon%
+    MonitorGet(curMon, &curMLeft, &curMTop, &curMRight, &curMBottom)
     curW := curMRight - curMLeft
     curH := curMBottom - curMTop
     
@@ -277,7 +289,7 @@ CapsLock & Space::
     if (nextMon > monCount)
         nextMon := 1
     
-    SysGet, nextM, Monitor, %nextMon%
+    MonitorGet(nextMon, &nextMLeft, &nextMTop, &nextMRight, &nextMBottom)
     nextW := nextMRight - nextMLeft
     nextH := nextMBottom - nextMTop
     
@@ -287,56 +299,38 @@ CapsLock & Space::
     newW := relW * nextW
     newH := relH * nextH
     
-    WinMove, A,, newX, newY, newW, newH
+    WinMove(newX, newY, newW, newH, "A")
     
     if (wasMaximized = 1)
-        WinMaximize, A
-return
+        WinMaximize("A")
+}
 
 ; CapsLock + S: Maximize window (+)
-CapsLock & s::
-    WinMaximize, A
-return
+CapsLock & s::WinMaximize("A")
 
 ; CapsLock + A: Left half (4)
-CapsLock & a::
-    MoveToRelativeArea(0, 0, 0.5, 1)
-return
+CapsLock & a::MoveToRelativeArea(0, 0, 0.5, 1)
 
 ; CapsLock + D: Right half (6)
-CapsLock & d::
-    MoveToRelativeArea(0.5, 0, 0.5, 1)
-return
+CapsLock & d::MoveToRelativeArea(0.5, 0, 0.5, 1)
 
 ; CapsLock + W: Top half (8)
-CapsLock & w::
-    MoveToRelativeArea(0, 0, 1, 0.5)
-return
+CapsLock & w::MoveToRelativeArea(0, 0, 1, 0.5)
 
 ; CapsLock + X: Bottom half (2)
-CapsLock & x::
-    MoveToRelativeArea(0, 0.5, 1, 0.5)
-return
+CapsLock & x::MoveToRelativeArea(0, 0.5, 1, 0.5)
 
 ; CapsLock + Q: Top-left quarter (7)
-CapsLock & q::
-    MoveToRelativeArea(0, 0, 0.5, 0.5)
-return
+CapsLock & q::MoveToRelativeArea(0, 0, 0.5, 0.5)
 
 ; CapsLock + E: Top-right quarter (9)
-CapsLock & e::
-    MoveToRelativeArea(0.5, 0, 0.5, 0.5)
-return
+CapsLock & e::MoveToRelativeArea(0.5, 0, 0.5, 0.5)
 
 ; CapsLock + Z: Bottom-left quarter (1)
-CapsLock & z::
-    MoveToRelativeArea(0, 0.5, 0.5, 0.5)
-return
+CapsLock & z::MoveToRelativeArea(0, 0.5, 0.5, 0.5)
 
 ; CapsLock + C: Bottom-right quarter (3)
-CapsLock & c::
-    MoveToRelativeArea(0.5, 0.5, 0.5, 0.5)
-return
+CapsLock & c::MoveToRelativeArea(0.5, 0.5, 0.5, 0.5)
 
 ; =============================================================================
 ; Thirds mode: Numpad0 + NumpadDot as chord, then 5/8/4/6/2 for thirds
@@ -345,7 +339,7 @@ return
 ; Helper function for moving to thirds
 MoveToThird(posX, posY, sizeW, sizeH)
 {
-    GetWindowArea(areaX, areaY, areaW, areaH)
+    GetWindowArea(&areaX, &areaY, &areaW, &areaH)
     RestoreIfMaximized()
     
     nX := areaX + (areaW * posX)
@@ -353,14 +347,14 @@ MoveToThird(posX, posY, sizeW, sizeH)
     nW := areaW * sizeW
     nH := areaH * sizeH
     
-    WinMove, A,, nX, nY, nW, nH
+    WinMove(nX, nY, nW, nH, "A")
 }
 
 ; Center third function (for monitor)
 MoveToCenterThird()
 {
     RestoreIfMaximized()
-    GetWindowMonitor(monLeft, monTop, monRight, monBottom)
+    GetWindowMonitor(&monLeft, &monTop, &monRight, &monBottom)
     
     monW := monRight - monLeft
     monH := monBottom - monTop
@@ -382,30 +376,20 @@ MoveToCenterThird()
         newH := monH // 3
     }
     
-    WinMove, A,, newX, newY, newW, newH
+    WinMove(newX, newY, newW, newH, "A")
 }
 
 ; NumpadDot + Numpad5: Center third
-NumpadDot & Numpad5::
-    MoveToCenterThird()
-return
+NumpadDot & Numpad5::MoveToCenterThird()
 
 ; NumpadDot + Numpad4: Left third
-NumpadDot & Numpad4::
-    MoveToThird(0, 0, 0.333333, 1)
-return
+NumpadDot & Numpad4::MoveToThird(0, 0, 0.333333, 1)
 
 ; NumpadDot + Numpad6: Right third
-NumpadDot & Numpad6::
-    MoveToThird(0.666667, 0, 0.333333, 1)
-return
+NumpadDot & Numpad6::MoveToThird(0.666667, 0, 0.333333, 1)
 
 ; NumpadDot + Numpad8: Top third
-NumpadDot & Numpad8::
-    MoveToThird(0, 0, 1, 0.333333)
-return
+NumpadDot & Numpad8::MoveToThird(0, 0, 1, 0.333333)
 
 ; NumpadDot + Numpad2: Bottom third
-NumpadDot & Numpad2::
-    MoveToThird(0, 0.666667, 1, 0.333333)
-return
+NumpadDot & Numpad2::MoveToThird(0, 0.666667, 1, 0.333333)
