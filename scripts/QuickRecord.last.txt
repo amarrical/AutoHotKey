@@ -1,0 +1,14 @@
+down	t	0
+up	t	125
+down	e	16
+up	e	94
+down	s	78
+up	s	94
+down	t	31
+up	t	94
+down	i	62
+down	n	78
+up	i	31
+down	g	32
+up	n	31
+up	g	47
