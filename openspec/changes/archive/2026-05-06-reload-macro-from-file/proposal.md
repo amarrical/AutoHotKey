@@ -4,7 +4,7 @@ Currently, QuickRecord replays recorded macros from memory, requiring a script r
 
 ## What Changes
 
-- Add Ctrl+F24 hotkey to reload the F24 recording from QuickRecord.last.txt without replaying it
+- Add Ctrl+F24 hotkey to reload the F24 recording from QuickRecord.last.F24.txt without replaying it
 - Add Ctrl+F23 hotkey to reload the F23 recording from QuickRecord.last.f23.txt without replaying it
 - Modify the replay behavior to use the reloaded buffer instead of the in-memory buffer
 - Preserve the ability to record and replay independently

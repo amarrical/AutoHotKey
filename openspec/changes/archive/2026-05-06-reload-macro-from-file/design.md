@@ -5,7 +5,7 @@ QuickRecord currently loads recording buffers at startup and keeps them in memor
 ## Goals / Non-Goals
 
 **Goals:**
-- Support Ctrl+F24 to reload F24 recording from QuickRecord.last.txt without replaying
+- Support Ctrl+F24 to reload F24 recording from QuickRecord.last.F24.txt without replaying
 - Support Ctrl+F23 to reload F23 recording from QuickRecord.last.f23.txt without replaying
 - Allow users to edit recording files and have changes take effect on the next replay
 - Maintain backward compatibility with existing record/replay functionality
