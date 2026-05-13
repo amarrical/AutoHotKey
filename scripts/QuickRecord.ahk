@@ -256,7 +256,7 @@ Replay23() {
 SaveBuffer() {
     global events, startTick
     
-    filePath := A_ScriptDir "\QuickRecord.last.F24.txt"
+    filePath := A_ScriptDir "\QR.F24.txt"
     
     if (events.Length = 0) {
         if (FileExist(filePath))
@@ -285,7 +285,7 @@ SaveBuffer() {
 SaveBuffer23() {
     global events23, startTick23
     
-    filePath := A_ScriptDir "\QuickRecord.last.f23.txt"
+    filePath := A_ScriptDir "\QR.F23.txt"
     
     if (events23.Length = 0) {
         if (FileExist(filePath))
@@ -319,7 +319,7 @@ LoadBuffer() {
 LoadBufferFromFile24() {
     global events, startTick
     
-    filePath := A_ScriptDir "\QuickRecord.last.F24.txt"
+    filePath := A_ScriptDir "\QR.F24.txt"
     
     if (!FileExist(filePath))
         return
@@ -363,7 +363,7 @@ LoadBufferFromFile24() {
 LoadBufferFromFile23() {
     global events23, startTick23
     
-    filePath := A_ScriptDir "\QuickRecord.last.f23.txt"
+    filePath := A_ScriptDir "\QR.F23.txt"
     
     if (!FileExist(filePath))
         return
@@ -453,7 +453,7 @@ StripWaits24() {
         event.tick := 0
     }
     
-    filePath := A_ScriptDir "\QuickRecord.last.F24.txt"
+    filePath := A_ScriptDir "\QR.F24.txt"
     content := ""
     
     for event in events {
@@ -487,7 +487,7 @@ StripWaits23() {
         event.tick := 0
     }
     
-    filePath := A_ScriptDir "\QuickRecord.last.f23.txt"
+    filePath := A_ScriptDir "\QR.F23.txt"
     content := ""
     
     for event in events23 {
@@ -513,8 +513,8 @@ ClearRecording() {
     events := []
     events23 := []
     
-    filePath24 := A_ScriptDir "\QuickRecord.last.F24.txt"
-    filePath23 := A_ScriptDir "\QuickRecord.last.f23.txt"
+    filePath24 := A_ScriptDir "\QR.F24.txt"
+    filePath23 := A_ScriptDir "\QR.F23.txt"
     
     if (FileExist(filePath24))
         FileDelete(filePath24)
