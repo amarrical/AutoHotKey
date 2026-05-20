@@ -103,6 +103,7 @@ Hold `Numpad0`, then press:
 |-----|--------|
 | `+` | Maximize window |
 | `Enter` | Move to next monitor (preserves relative size/position) |
+| `1`–`9` | Move window to monitor 1–9 (preserves relative size/position) |
 | `5` | Center half *(orientation-aware)* |
 | `4` | Left half |
 | `6` | Right half |
@@ -251,6 +252,7 @@ Hold `Ctrl`, hold `CapsLock`, then press a letter key.
 | Chord | Modifier | System | Result |
 |-------|----------|--------|--------|
 | `0 + dir` | — | Numpad0 | Relative half/quarter |
+| `0 + 1–9` | — | Numpad0 | Move to monitor 1–9 |
 | `0 + 5` | — | Numpad0 | Center half (orientation-aware) |
 | `0 + Enter` | — | Numpad0 | Next monitor |
 | `0 + +` | — | Numpad0 | Maximize |

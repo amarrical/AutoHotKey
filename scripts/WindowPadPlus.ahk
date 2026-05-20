@@ -122,8 +122,76 @@ MoveToAbsoluteArea(posX, posY, sizeW, sizeH)
     WinMove(nX, nY, nW, nH, "A")
 }
 
+; Move window to a specific monitor by number
+MoveToMonitor(monitorNum)
+{
+    monCount := MonitorGetCount()
+    
+    ; Silently do nothing if monitor doesn't exist
+    if (monitorNum < 1 || monitorNum > monCount)
+        return
+    
+    wasMaximized := WinGetMinMax("A")
+    if (wasMaximized = 1)
+        WinRestore("A")
+    
+    WinGetPos(&winX, &winY, &winW, &winH, "A")
+    
+    ; Find current monitor using window center point
+    centerX := winX + (winW // 2)
+    centerY := winY + (winH // 2)
+    curMon := 1
+    Loop monCount
+    {
+        MonitorGet(A_Index, &monLeft, &monTop, &monRight, &monBottom)
+        if (centerX >= monLeft && centerX < monRight && centerY >= monTop && centerY < monBottom)
+        {
+            curMon := A_Index
+            break
+        }
+    }
+    
+    ; Get current monitor dimensions
+    MonitorGet(curMon, &curMLeft, &curMTop, &curMRight, &curMBottom)
+    curW := curMRight - curMLeft
+    curH := curMBottom - curMTop
+    
+    ; Calculate relative position and size
+    relX := (winX - curMLeft) / curW
+    relY := (winY - curMTop) / curH
+    relW := winW / curW
+    relH := winH / curH
+    
+    ; Get target monitor dimensions
+    MonitorGet(monitorNum, &targetMLeft, &targetMTop, &targetMRight, &targetMBottom)
+    targetW := targetMRight - targetMLeft
+    targetH := targetMBottom - targetMTop
+    
+    ; Apply relative position to target monitor
+    newX := targetMLeft + (relX * targetW)
+    newY := targetMTop + (relY * targetH)
+    newW := relW * targetW
+    newH := relH * targetH
+    
+    WinMove(newX, newY, newW, newH, "A")
+    
+    if (wasMaximized = 1)
+        WinMaximize("A")
+}
+
 ; Numpad0 + NumpadAdd: Maximize window
 Numpad0 & NumpadAdd::WinMaximize("A")
+
+; Numpad0 + 1-9: Move window to monitor 1-9
+Numpad0 & 1::MoveToMonitor(1)
+Numpad0 & 2::MoveToMonitor(2)
+Numpad0 & 3::MoveToMonitor(3)
+Numpad0 & 4::MoveToMonitor(4)
+Numpad0 & 5::MoveToMonitor(5)
+Numpad0 & 6::MoveToMonitor(6)
+Numpad0 & 7::MoveToMonitor(7)
+Numpad0 & 8::MoveToMonitor(8)
+Numpad0 & 9::MoveToMonitor(9)
 
 ; Numpad0 + NumpadEnter: Move to next monitor
 Numpad0 & NumpadEnter::
